@@ -4,64 +4,45 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Task
 from rest_framework.response import Response
 from rest_framework import status
+from .serializers import CreateTaskSerializer, EditTaskSerializer, TasksSerializer
 
 # Create your views here.
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_task(request):
 
-  title = request.data.get('title')
-  description = request.data.get('description')
-  status = request.data.get('status')
+  serializer = CreateTaskSerializer(data=request.data, context={'request': request})
 
-  task = Task.objects.create(
-    user=request.user,
-    title=title,
-    description=description,
-    status=status
-  )
+  if serializer.is_valid():
+    
+    serializer.save()
 
-  if task is not None:
     return Response({
-      'message': 'task created successfully',
-      'task': {
-        'title': task.title,
-        'description': task.description,
-        'status': task.status,
-        'user': task.user.id
-      }
-    })
+      'message': 'Task created successfully',
+      'data': serializer.data
+    })  
   
-  return Response({
-    'error': 'error occured while creating task'
-  })
+  return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def edit_task(request, task_id):
   
-  task = get_object_or_404(Task, id=task_id)
-
-  if task.user != request.user:
-    return Response({
-      'error': 'Not authenticated to make changes to the task'
-    }, status=status.HTTP_403_FORBIDDEN)
+  task = get_object_or_404(Task, id=task_id, user=request.user)
   
-  task.title = request.data.get('title')
-  task.description = request.data.get('description')
-  task.status = request.data.get('status')
+  serializer = EditTaskSerializer(task, data=request.data, partial=True)
 
-  task.save()
+  if serializer.is_valid():
 
-  return Response({
-    'message': 'Task updated successfully',
-    'task': {
-      'title': task.title,
-      'description': task.description,
-      'status': task.status
-    }
-  })
+    serializer.save()
+
+    return Response({
+      'message': 'Task Updated successfully',
+      'data': serializer.data
+    })
+
+  return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -71,17 +52,10 @@ def view_tasks(request):
 
   tasks = Task.objects.filter(user=request.user)
   
-  data = []
+  serializer = TasksSerializer(tasks, many=True)
 
-  for task in tasks:
-    data.append({
-      'task_id': task.id,
-      'title': task.title,
-      'description': task.description,
-      'status': task.status
-    })
+  return Response(serializer.data)
 
-  return Response(data)
 
 
 @api_view(['DELETE'])
