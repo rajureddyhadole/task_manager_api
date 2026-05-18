@@ -5,6 +5,7 @@ from .models import Task
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import CreateTaskSerializer, EditTaskSerializer, TasksSerializer
+from .pagination import TaskPagination
 
 # Create your views here.
 @api_view(['POST'])
@@ -51,10 +52,37 @@ def edit_task(request, task_id):
 def view_tasks(request):
 
   tasks = Task.objects.filter(user=request.user)
-  
-  serializer = TasksSerializer(tasks, many=True)
 
-  return Response(serializer.data)
+  status_param = request.query_params.get('status')
+  search_query = request.query_params.get('search')
+
+  if status_param:
+
+    tasks = tasks.filter(
+      status=status_param
+    )
+
+  if search_query:
+
+    tasks = tasks.filter(
+      title__icontains=search_query
+    )
+
+  paginator = TaskPagination()
+
+  paginated_tasks = paginator.paginate_queryset(
+    tasks,
+    request
+  )
+  
+  serializer = TasksSerializer(
+    paginated_tasks, 
+    many=True
+  )
+
+  return paginator.get_paginated_response(
+    serializer.data
+  )
 
 
 
