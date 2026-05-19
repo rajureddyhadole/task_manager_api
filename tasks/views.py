@@ -30,7 +30,12 @@ def create_task(request):
 @permission_classes([IsAuthenticated])
 def edit_task(request, task_id):
   
-  task = get_object_or_404(Task, id=task_id, user=request.user)
+  task = get_object_or_404(
+    Task, 
+    id=task_id, 
+    user=request.user,
+    is_deleted=False
+  )
   
   serializer = EditTaskSerializer(task, data=request.data, partial=True)
 
@@ -51,7 +56,10 @@ def edit_task(request, task_id):
 @permission_classes([IsAuthenticated])
 def view_tasks(request):
 
-  tasks = Task.objects.filter(user=request.user)
+  tasks = Task.objects.filter(
+    user=request.user,
+    is_deleted=False
+  )
 
   status_param = request.query_params.get('status')
   search_query = request.query_params.get('search')
@@ -92,7 +100,8 @@ def delete_task(request, task_id):
   
   task = get_object_or_404(Task, id=task_id, user=request.user)
 
-  task.delete()
+  task.is_deleted = True
+  task.save()
 
   return Response({
     'message': "task deleted successfully."
