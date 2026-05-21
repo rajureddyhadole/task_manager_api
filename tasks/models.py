@@ -18,6 +18,23 @@ class Task(models.Model):
     default=Status.PENDING
   )
 
+  class Priority(models.TextChoices):
+    HIGH = 'high_priority', 'High_priority'
+    MEDIUM = 'medium_priority', 'Medium_priority'
+    LOW = 'low_priority', 'Low_priority'
+
+  priority = models.CharField(
+    max_length=50,
+    choices= Priority.choices,
+    default=Priority.MEDIUM
+  )
+
+  due_date = models.DateField(null=True, blank=True)
+
+  created_at = models.DateTimeField(auto_now_add=True)
+
+  updated_at = models.DateTimeField(auto_now=True)
+
   is_deleted = models.BooleanField(default=False)
 
   def __str__(self):
