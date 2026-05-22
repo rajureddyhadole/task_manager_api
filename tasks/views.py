@@ -63,6 +63,7 @@ def view_tasks(request):
 
   status_param = request.query_params.get('status')
   search_query = request.query_params.get('search')
+  priority_param = request.query_params.get('priority')
 
   if status_param:
 
@@ -74,6 +75,12 @@ def view_tasks(request):
 
     tasks = tasks.filter(
       title__icontains=search_query
+    )
+  
+  if priority_param:
+
+    tasks = tasks.filter(
+      priority=priority_param
     )
 
   paginator = TaskPagination()

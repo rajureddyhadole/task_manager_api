@@ -6,4 +6,4 @@ from .models import Task
 class TaskAdmin(admin.ModelAdmin):
   list_display = ['id', 'title', 'description', 'status', 'is_deleted']
   list_filter = ['status']
-  search_fields = ['title', 'display']
+  search_fields = ['title', 'description']
