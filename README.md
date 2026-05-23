@@ -7,6 +7,12 @@ A Django REST Framework backend for a task management application. This project 
 - User registration and login
 - JWT authentication with access and refresh tokens
 - Task creation, listing, editing, and deletion
+- Pagination for task lists
+- Filtering by status, priority, and overdue tasks
+- Search by task title
+- Priority support for tasks
+- Due date validation to prevent past dates
+- Soft delete support via `is_deleted`
 - Custom user model via `users.CustomUser`
 - Django REST Framework API endpoints
 
@@ -86,10 +92,17 @@ The database configuration is defined in `task_manager/settings.py` and uses `py
 
 ### Task Management
 
-- `GET /tasks/` — list all tasks
+- `GET /tasks/` — list tasks with optional filtering, search, and pagination
 - `POST /tasks/create/` — create a new task
 - `PUT /tasks/edit/<task_id>/` — update an existing task
-- `DELETE /tasks/delete/<task_id>/` — delete a task
+- `DELETE /tasks/delete/<task_id>/` — soft delete a task
+
+#### Task Query Parameters
+
+- `status` — filter tasks by status (`pending`, `completed`)
+- `priority` — filter tasks by priority (`high_priority`, `medium_priority`, `low_priority`)
+- `search` — search task titles using a case-insensitive substring match
+- `overdue=true` — filter for tasks whose due date has passed and are not completed
 
 ## Testing
 
