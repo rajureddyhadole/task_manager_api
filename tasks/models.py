@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils.timezone import now
 # Create your models here.
 class Task(models.Model):
 
@@ -36,6 +37,14 @@ class Task(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
 
   is_deleted = models.BooleanField(default=False)
+
+  @property
+  def is_overdue(self):
+    return (
+      self.due_date
+      and self.due_date < now().date()
+      and self.status != "completed"
+    )
 
   def __str__(self):
     return f"{self.id}. {self.title}  user_id:{self.user.id}"

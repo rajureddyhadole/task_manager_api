@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import CreateTaskSerializer, EditTaskSerializer, TasksSerializer
 from .pagination import TaskPagination
+from django.utils.timezone import now
 
 # Create your views here.
 @api_view(['POST'])
@@ -64,6 +65,7 @@ def view_tasks(request):
   status_param = request.query_params.get('status')
   search_query = request.query_params.get('search')
   priority_param = request.query_params.get('priority')
+  overdue_param = request.query_params.get('overdue')
 
   if status_param:
 
@@ -81,6 +83,13 @@ def view_tasks(request):
 
     tasks = tasks.filter(
       priority=priority_param
+    )
+
+  if overdue_param == "true":
+
+    tasks = tasks.filter(
+      due_date__lt=now().date(),
+      status="pending" 
     )
 
   paginator = TaskPagination()
