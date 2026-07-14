@@ -83,41 +83,40 @@ def task_list_create(request):
 
 
 
-@api_view(['PUT'])
+@api_view(['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def edit_task(request, task_id):
+def task_detail(request, task_id):
   
-  task = get_object_or_404(
-    Task, 
-    id=task_id, 
-    user=request.user,
-    is_deleted=False
-  )
+  if request.method == "PUT":
+
+    task = get_object_or_404(
+      Task, 
+      id=task_id, 
+      user=request.user,
+      is_deleted=False
+    )
+    
+    serializer = EditTaskSerializer(task, data=request.data, partial=True)
+
+    if serializer.is_valid():
+
+      serializer.save()
+
+      return Response({
+        'message': 'Task Updated successfully',
+        'data': serializer.data
+      })
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
   
-  serializer = EditTaskSerializer(task, data=request.data, partial=True)
 
-  if serializer.is_valid():
+  if request.method == "DELETE":
 
-    serializer.save()
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+
+    task.is_deleted = True
+    task.save()
 
     return Response({
-      'message': 'Task Updated successfully',
-      'data': serializer.data
+      'message': "task deleted successfully."
     })
-
-  return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_task(request, task_id):
-  
-  task = get_object_or_404(Task, id=task_id, user=request.user)
-
-  task.is_deleted = True
-  task.save()
-
-  return Response({
-    'message': "task deleted successfully."
-  })
