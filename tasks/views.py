@@ -9,22 +9,78 @@ from .pagination import TaskPagination
 from django.utils.timezone import now
 
 # Create your views here.
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
-def create_task(request):
+def task_list_create(request):
 
-  serializer = CreateTaskSerializer(data=request.data, context={'request': request})
+  if request.method == "GET":
+    tasks = Task.objects.filter(
+    user=request.user,
+    is_deleted=False
+    )
 
-  if serializer.is_valid():
+    status_param = request.query_params.get('status')
+    search_query = request.query_params.get('search')
+    priority_param = request.query_params.get('priority')
+    overdue_param = request.query_params.get('overdue')
+
+    if status_param:
+
+      tasks = tasks.filter(
+        status=status_param
+      )
+
+    if search_query:
+
+      tasks = tasks.filter(
+        title__icontains=search_query
+      )
     
-    serializer.save()
+    if priority_param:
 
-    return Response({
-      'message': 'Task created successfully',
-      'data': serializer.data
-    })  
+      tasks = tasks.filter(
+        priority=priority_param
+      )
+
+    if overdue_param == "true":
+
+      tasks = tasks.filter(
+        due_date__lt=now().date(),
+        status="pending" 
+      )
+
+    paginator = TaskPagination()
+
+    paginated_tasks = paginator.paginate_queryset(
+      tasks,
+      request
+    )
+    
+    serializer = TasksSerializer(
+      paginated_tasks, 
+      many=True
+    )
+
+    return paginator.get_paginated_response(
+      serializer.data
+    )
   
-  return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+  if request.method == "POST":
+    serializer = CreateTaskSerializer(data=request.data, context={'request': request})
+
+    if serializer.is_valid():
+      
+      serializer.save()
+
+      return Response({
+        'message': 'Task created successfully',
+        'data': serializer.data
+      })  
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['PUT'])
@@ -50,63 +106,6 @@ def edit_task(request, task_id):
     })
 
   return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def view_tasks(request):
-
-  tasks = Task.objects.filter(
-    user=request.user,
-    is_deleted=False
-  )
-
-  status_param = request.query_params.get('status')
-  search_query = request.query_params.get('search')
-  priority_param = request.query_params.get('priority')
-  overdue_param = request.query_params.get('overdue')
-
-  if status_param:
-
-    tasks = tasks.filter(
-      status=status_param
-    )
-
-  if search_query:
-
-    tasks = tasks.filter(
-      title__icontains=search_query
-    )
-  
-  if priority_param:
-
-    tasks = tasks.filter(
-      priority=priority_param
-    )
-
-  if overdue_param == "true":
-
-    tasks = tasks.filter(
-      due_date__lt=now().date(),
-      status="pending" 
-    )
-
-  paginator = TaskPagination()
-
-  paginated_tasks = paginator.paginate_queryset(
-    tasks,
-    request
-  )
-  
-  serializer = TasksSerializer(
-    paginated_tasks, 
-    many=True
-  )
-
-  return paginator.get_paginated_response(
-    serializer.data
-  )
 
 
 
