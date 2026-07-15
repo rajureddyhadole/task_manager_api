@@ -7,16 +7,15 @@ from rest_framework import status
 from .serializers import CreateTaskSerializer, EditTaskSerializer, TasksSerializer
 from .pagination import TaskPagination
 from django.utils.timezone import now
+from rest_framework.views import APIView
 
-# Create your views here.
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def task_list_create(request):
+class TaskList(APIView):
 
-  if request.method == "GET":
+  def get(self, request):
+
     tasks = Task.objects.filter(
-    user=request.user,
-    is_deleted=False
+      user=request.user,
+      is_deleted=False
     )
 
     status_param = request.query_params.get('status')
@@ -66,13 +65,13 @@ def task_list_create(request):
     )
   
 
+  def post(self, request):
 
-  if request.method == "POST":
     serializer = CreateTaskSerializer(data=request.data, context={'request': request})
 
     if serializer.is_valid():
       
-      serializer.save()
+      serializer.save(user=request.user)
 
       return Response({
         'message': 'Task created successfully',
@@ -82,12 +81,9 @@ def task_list_create(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class TaskDetail(APIView):
 
-@api_view(['PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
-def task_detail(request, task_id):
-  
-  if request.method == "PUT":
+  def put(self, request, task_id):
 
     task = get_object_or_404(
       Task, 
@@ -110,7 +106,7 @@ def task_detail(request, task_id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
   
 
-  if request.method == "DELETE":
+  def delete(self, request, task_id):
 
     task = get_object_or_404(Task, id=task_id, user=request.user)
 
