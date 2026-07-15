@@ -9,7 +9,9 @@ from .pagination import TaskPagination
 from django.utils.timezone import now
 from rest_framework.views import APIView
 
-class TaskList(APIView):
+class TaskListCreateAPIView(APIView):
+
+  permission_classes = [IsAuthenticated]
 
   def get(self, request):
 
@@ -76,14 +78,27 @@ class TaskList(APIView):
       return Response({
         'message': 'Task created successfully',
         'data': serializer.data
-      })  
+      }, status=status.HTTP_201_CREATED)  
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class TaskDetail(APIView):
+class TaskDetailAPIView(APIView):
 
-  def put(self, request, task_id):
+  permission_classes = [IsAuthenticated]
+
+  def get(self, request, task_id):
+
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+
+    serializer = TasksSerializer(task)
+
+    return Response({
+      'data': serializer.data
+    }, status=status.HTTP_200_OK)
+
+
+  def patch(self, request, task_id):
 
     task = get_object_or_404(
       Task, 
@@ -108,7 +123,7 @@ class TaskDetail(APIView):
 
   def delete(self, request, task_id):
 
-    task = get_object_or_404(Task, id=task_id, user=request.user)
+    task = get_object_or_404(Task, id=task_id, user=request.user, is_deleted=False)
 
     task.is_deleted = True
     task.save()
