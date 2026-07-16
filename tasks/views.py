@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Task
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import CreateTaskSerializer, EditTaskSerializer, TasksSerializer
+from .serializers import  TaskSerializer
 from .pagination import TaskPagination
 from django.utils.timezone import now
 from rest_framework.views import APIView
@@ -57,7 +57,7 @@ class TaskListCreateAPIView(APIView):
       request
     )
     
-    serializer = TasksSerializer(
+    serializer = TaskSerializer(
       paginated_tasks, 
       many=True
     )
@@ -69,7 +69,7 @@ class TaskListCreateAPIView(APIView):
 
   def post(self, request):
 
-    serializer = CreateTaskSerializer(data=request.data, context={'request': request})
+    serializer = TaskSerializer(data=request.data, context={'request': request})
 
     if serializer.is_valid():
       
@@ -91,7 +91,7 @@ class TaskDetailAPIView(APIView):
 
     task = get_object_or_404(Task, id=task_id, user=request.user)
 
-    serializer = TasksSerializer(task)
+    serializer = TaskSerializer(task)
 
     return Response({
       'data': serializer.data
@@ -107,7 +107,7 @@ class TaskDetailAPIView(APIView):
       is_deleted=False
     )
     
-    serializer = EditTaskSerializer(task, data=request.data, partial=True)
+    serializer = TaskSerializer(task, data=request.data, partial=True)
 
     if serializer.is_valid():
 

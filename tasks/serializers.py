@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Task
 from django.utils.timezone import now
 
-class CreateTaskSerializer(serializers.ModelSerializer):
+class TaskSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Task
@@ -18,12 +18,7 @@ class CreateTaskSerializer(serializers.ModelSerializer):
     
     return value
 
-class EditTaskSerializer(serializers.ModelSerializer):
-
-  class Meta:
-    model = Task
-    fields = ['id', 'title', 'description', 'status', 'priority', 'due_date']
-
+  
   def validate_due_date(self, value):
 
     if value and value < now().date():
@@ -35,9 +30,26 @@ class EditTaskSerializer(serializers.ModelSerializer):
     return value
 
 
+# class EditTaskSerializer(serializers.ModelSerializer):
 
-class TasksSerializer(serializers.ModelSerializer):
+#   class Meta:
+#     model = Task
+#     fields = ['id', 'title', 'description', 'status', 'priority', 'due_date']
 
-  class Meta:
-    model = Task
-    fields = ['id', 'title', 'description', 'status', 'priority', 'due_date']
+#   def validate_due_date(self, value):
+
+#     if value and value < now().date():
+
+#       raise serializers.ValidationError(
+#         "Due date cannot be in past"
+#       )
+    
+#     return value
+
+
+
+# class TasksSerializer(serializers.ModelSerializer):
+
+#   class Meta:
+#     model = Task
+#     fields = ['id', 'title', 'description', 'status', 'priority', 'due_date']
