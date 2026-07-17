@@ -28,28 +28,3 @@ class TaskSerializer(serializers.ModelSerializer):
       )
     
     return value
-
-
-# class EditTaskSerializer(serializers.ModelSerializer):
-
-#   class Meta:
-#     model = Task
-#     fields = ['id', 'title', 'description', 'status', 'priority', 'due_date']
-
-#   def validate_due_date(self, value):
-
-#     if value and value < now().date():
-
-#       raise serializers.ValidationError(
-#         "Due date cannot be in past"
-#       )
-    
-#     return value
-
-
-
-# class TasksSerializer(serializers.ModelSerializer):
-
-#   class Meta:
-#     model = Task
-#     fields = ['id', 'title', 'description', 'status', 'priority', 'due_date']

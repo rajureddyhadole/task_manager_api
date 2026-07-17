@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import TaskListCreateAPIView, TaskDetailAPIView
+from .views import TaskListCreateView, TaskDetailView
 
 urlpatterns = [
-  path('tasks/', TaskListCreateAPIView.as_view()),
-  path('tasks/<int:task_id>/', TaskDetailAPIView.as_view())
+  path('tasks/', TaskListCreateView.as_view()),
+  path('tasks/<int:task_id>/', TaskDetailView.as_view())
 ]

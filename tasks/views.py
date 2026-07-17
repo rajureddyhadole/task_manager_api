@@ -8,126 +8,65 @@ from .serializers import  TaskSerializer
 from .pagination import TaskPagination
 from django.utils.timezone import now
 from rest_framework.views import APIView
+from rest_framework import generics
 
-class TaskListCreateAPIView(APIView):
 
+class TaskListCreateView(generics.ListCreateAPIView):
+  serializer_class = TaskSerializer
   permission_classes = [IsAuthenticated]
 
-  def get(self, request):
-
+  def get_queryset(self):
     tasks = Task.objects.filter(
-      user=request.user,
+      user=self.request.user,
       is_deleted=False
     )
 
-    status_param = request.query_params.get('status')
-    search_query = request.query_params.get('search')
-    priority_param = request.query_params.get('priority')
-    overdue_param = request.query_params.get('overdue')
+    status_param = self.request.query_params.get('status')
+    search_query = self.request.query_params.get('search')
+    priority_param = self.request.query_params.get('priority')
+    overdue_param = self.request.query_params.get('overdue')
 
     if status_param:
-
-      tasks = tasks.filter(
-        status=status_param
-      )
-
+      tasks = tasks.filter(status=status_param)
+    
     if search_query:
-
-      tasks = tasks.filter(
-        title__icontains=search_query
-      )
+      tasks = tasks.filter(title__icontains=search_query)
     
     if priority_param:
-
-      tasks = tasks.filter(
-        priority=priority_param
-      )
-
+      tasks = tasks.filter(priority=priority_param)
+    
     if overdue_param == "true":
-
       tasks = tasks.filter(
         due_date__lt=now().date(),
-        status="pending" 
+        status='pending'
       )
 
-    paginator = TaskPagination()
+    return tasks
 
-    paginated_tasks = paginator.paginate_queryset(
-      tasks,
-      request
-    )
-    
-    serializer = TaskSerializer(
-      paginated_tasks, 
-      many=True
-    )
+  def perform_create(self, serializer):
+    serializer.save(user=self.request.user)
 
-    return paginator.get_paginated_response(
-      serializer.data
-    )
-  
+  def list(self, request):
+    queryset = self.get_queryset()
+    serializer = self.get_serializer(queryset, many = True)
 
-  def post(self, request):
-
-    serializer = TaskSerializer(data=request.data, context={'request': request})
-
-    if serializer.is_valid():
-      
-      serializer.save(user=request.user)
-
-      return Response({
-        'message': 'Task created successfully',
-        'data': serializer.data
-      }, status=status.HTTP_201_CREATED)  
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+      'message': "Tasks fetched successfully",
+      'data': serializer.data
+    })
 
 
-class TaskDetailAPIView(APIView):
 
+class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
+
+  serializer_class = TaskSerializer
   permission_classes = [IsAuthenticated]
 
-  def get(self, request, task_id):
-
-    task = get_object_or_404(Task, id=task_id, user=request.user)
-
-    serializer = TaskSerializer(task)
-
-    return Response({
-      'data': serializer.data
-    }, status=status.HTTP_200_OK)
-
-
-  def patch(self, request, task_id):
-
-    task = get_object_or_404(
-      Task, 
-      id=task_id, 
-      user=request.user,
-      is_deleted=False
-    )
-    
-    serializer = TaskSerializer(task, data=request.data, partial=True)
-
-    if serializer.is_valid():
-
-      serializer.save()
-
-      return Response({
-        'message': 'Task Updated successfully',
-        'data': serializer.data
-      })
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+  def get_queryset(self):
+    return Task.objects.filter(user=self.request.user, is_deleted=False)
   
+  lookup_url_kwarg = "task_id"
 
-  def delete(self, request, task_id):
-
-    task = get_object_or_404(Task, id=task_id, user=request.user, is_deleted=False)
-
-    task.is_deleted = True
-    task.save()
-
-    return Response({
-      'message': "task deleted successfully."
-    })
+  def perform_destroy(self, instance):
+    instance.is_deleted = True
+    instance.save()
