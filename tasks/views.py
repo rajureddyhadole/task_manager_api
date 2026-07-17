@@ -14,6 +14,7 @@ from rest_framework import generics
 class TaskListCreateView(generics.ListCreateAPIView):
   serializer_class = TaskSerializer
   permission_classes = [IsAuthenticated]
+  pagination_class = TaskPagination
 
   def get_queryset(self):
     tasks = Task.objects.filter(
@@ -41,20 +42,10 @@ class TaskListCreateView(generics.ListCreateAPIView):
         status='pending'
       )
 
-    return tasks
+    return tasks.order_by('-created_at')
 
   def perform_create(self, serializer):
     serializer.save(user=self.request.user)
-
-  def list(self, request):
-    queryset = self.get_queryset()
-    serializer = self.get_serializer(queryset, many = True)
-
-    return Response({
-      'message': "Tasks fetched successfully",
-      'data': serializer.data
-    })
-
 
 
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -67,6 +58,12 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
   
   lookup_url_kwarg = "task_id"
 
-  def perform_destroy(self, instance):
+  def destroy(self, request, *args, **kwargs):
+    instance = self.get_object()
+
     instance.is_deleted = True
     instance.save()
+
+    return Response({
+      'message': "Task deleted successfully"
+    }, status=status.HTTP_200_OK)
