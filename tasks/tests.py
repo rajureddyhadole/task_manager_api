@@ -18,6 +18,14 @@ class TaskAPITestCase(APITestCase):
       password="pass123"
     )
 
+    self.task = Task.objects.create(
+      user=self.authenticated_user,
+      title="this is a test",
+      description="this is a test description",
+      status="pending",
+      priority="high_priority",
+    )
+
     self.url = reverse("task-list")
 
   def test_authenticated_user_can_access_tasks(self):
@@ -27,6 +35,8 @@ class TaskAPITestCase(APITestCase):
     response = self.client.get(self.url)
 
     self.assertEqual(response.status_code, 200)
+
+    self.assertEqual(response.data["results"][0]['title'], "this is a test")
 
 
   def test_unauthenticated_user_cannot_access_tasks(self):
