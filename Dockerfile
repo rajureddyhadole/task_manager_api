@@ -13,7 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 5. Copy the rest of your Django project code
 COPY . .
-RUN python manage.py collectstatic --noinput
 
 # 6. Expose the port Django runs on
 EXPOSE 8000
