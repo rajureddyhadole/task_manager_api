@@ -13,9 +13,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 5. Copy the rest of your Django project code
 COPY . .
+RUN python manage.py collectstatic --noinput
 
 # 6. Expose the port Django runs on
 EXPOSE 8000
 
 # 7. Start the Django development server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["gunicorn", "task_manager.wsgi:application", "--bind", "0.0.0.0:8000"]
